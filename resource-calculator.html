@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resource Calculator — Roblox Game Dev</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f5;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:2rem 1rem}
+.wrap{width:100%;max-width:580px}
+h1{font-size:16px;font-weight:600;color:#111;margin-bottom:4px}
+.sub{font-size:13px;color:#888;margin-bottom:1.5rem}
+.card{background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:1.25rem;margin-bottom:12px}
+.card-title{font-size:13px;font-weight:600;color:#111;margin-bottom:12px}
+.field{margin-bottom:10px}
+.field label{font-size:12px;color:#666;display:block;margin-bottom:4px}
+.field input{width:100%;height:36px;border:1px solid #ddd;border-radius:8px;padding:0 10px;font-size:14px;color:#111;background:#fafafa;outline:none;transition:border .15s}
+.field input:focus{border-color:#3b82f6;background:#fff}
+.results{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px}
+.res-box{background:#f5f5f5;border-radius:8px;padding:.875rem;text-align:center}
+.res-val{font-size:20px;font-weight:600;color:#111;margin-bottom:2px}
+.res-lbl{font-size:11px;color:#888}
+.res-sub{font-size:11px;color:#aaa;margin-top:4px}
+.note{border-radius:8px;padding:10px 14px;font-size:12px;line-height:1.6}
+.note.warn{background:#fff8e6;color:#92600a;border:1px solid #f5d98a}
+.note.ok{background:#edfaf3;color:#166534;border:1px solid #86efac}
+.formula{background:#f9f9f9;border:1px solid #eee;border-radius:8px;padding:12px 14px;font-size:12px;color:#666;line-height:1.8}
+.formula b{color:#444;font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Resource Calculator</h1>
+  <div class="sub">Roblox Game Dev Team · In-house + Outsource</div>
+
+  <div class="card">
+    <div class="card-title">Inputs</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="field"><label>Total mandays</label><input type="number" id="md" value="600" min="1" oninput="c()"></div>
+      <div class="field"><label>Deadline (tuần)</label><input type="number" id="wk" value="12" min="1" oninput="c()"></div>
+      <div class="field"><label>In-house (người)</label><input type="number" id="ih" value="10" min="0" oninput="c()"></div>
+      <div class="field"><label>In-house availability (%)</label><input type="number" id="ia" value="80" min="10" max="100" oninput="c()"></div>
+      <div class="field"><label>Outsource availability (%)</label><input type="number" id="oa" value="60" min="10" max="100" oninput="c()"></div>
+      <div class="field"><label>Ngày làm/tuần</label><input type="number" id="wd" value="5" min="1" max="7" oninput="c()"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Kết quả</div>
+    <div class="results">
+      <div class="res-box">
+        <div class="res-val" id="r-ih">—</div>
+        <div class="res-lbl">In-house capacity</div>
+        <div class="res-sub" id="r-ih-s"></div>
+      </div>
+      <div class="res-box">
+        <div class="res-val" id="r-gap">—</div>
+        <div class="res-lbl" id="r-gap-l">Thiếu / Dư</div>
+        <div class="res-sub" id="r-gap-s"></div>
+      </div>
+      <div class="res-box">
+        <div class="res-val" id="r-os">—</div>
+        <div class="res-lbl">Outsource cần</div>
+        <div class="res-sub" id="r-os-s"></div>
+      </div>
+    </div>
+    <div class="note" id="r-note"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Công thức</div>
+    <div class="formula">
+      <b>In-house capacity</b> = Người × Tuần × Ngày/tuần × Availability%<br>
+      <b>Thiếu</b> = Total Mandays − In-house capacity<br>
+      <b>Outsource cần</b> = Thiếu ÷ (Tuần × Ngày/tuần × Outsource%)
+    </div>
+  </div>
+</div>
+
+<script>
+function c(){
+  const md=+document.getElementById('md').value||0;
+  const wk=+document.getElementById('wk').value||0;
+  const ih=+document.getElementById('ih').value||0;
+  const ia=(+document.getElementById('ia').value||80)/100;
+  const oa=(+document.getElementById('oa').value||60)/100;
+  const wd=+document.getElementById('wd').value||5;
+  const ihCap=Math.round(ih*wk*wd*ia);
+  const osCap=wk*wd*oa;
+  const gap=md-ihCap;
+  const osNeeded=gap>0?Math.ceil(gap/osCap):0;
+
+  document.getElementById('r-ih').textContent=ihCap+' days';
+  document.getElementById('r-ih-s').textContent=ih+'p × '+wk+'w × '+wd+'d × '+Math.round(ia*100)+'%';
+
+  const gapEl=document.getElementById('r-gap');
+  if(gap>0){gapEl.textContent='+'+gap+' days';gapEl.style.color='#dc2626';document.getElementById('r-gap-s').textContent='cần outsource';}
+  else{gapEl.textContent=Math.abs(gap)+' days';gapEl.style.color='#16a34a';document.getElementById('r-gap-s').textContent='buffer dư';}
+
+  const osEl=document.getElementById('r-os');
+  if(osNeeded>0){osEl.textContent=osNeeded+' người';osEl.style.color='#111';document.getElementById('r-os-s').textContent=Math.round(osCap)+' days/người';}
+  else{osEl.textContent='0 người';osEl.style.color='#16a34a';document.getElementById('r-os-s').textContent='không cần';}
+
+  const note=document.getElementById('r-note');
+  if(gap>0){
+    note.className='note warn';
+    note.textContent='Tổng team cần: '+(ih+osNeeded)+' người · Outsource '+osNeeded+' người bù '+Math.round(osNeeded*osCap)+' days capacity';
+  } else {
+    note.className='note ok';
+    note.textContent='In-house đủ xử lý '+md+' mandays — dư '+Math.abs(gap)+' days buffer.';
+  }
+}
+c();
+</script>
+</body>
+</html>
